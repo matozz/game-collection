@@ -1,12 +1,12 @@
 {
-  "title": "Snake-Game",
+  "title": "Crazy-Games",
   "packageName": "org.cocos2d.demo",
   "startScene": "f7e086a6-2b59-4ec6-86cb-2e752d60e9f2",
   "excludeScenes": [],
   "orientation": {
-    "landscapeRight": true,
-    "landscapeLeft": true,
-    "portrait": false,
+    "landscapeRight": false,
+    "landscapeLeft": false,
+    "portrait": true,
     "upsideDown": false
   },
   "webOrientation": "auto",
@@ -26,7 +26,7 @@
     "REMOTE_SERVER_ROOT": ""
   },
   "ios": {
-    "packageName": "org.cocos2d.demo",
+    "packageName": "org.matoz.game",
     "REMOTE_SERVER_ROOT": "",
     "ios_enable_jit": true
   },
@@ -51,5 +51,8 @@
     "recordPath": ""
   },
   "appBundle": false,
-  "agreements": {}
+  "agreements": {
+    "20200904180755": false,
+    "20200904180716": false
+  }
 }

@@ -3,6 +3,14 @@ const SCENESLIST = [
     title: " Snake",
     name: "snake",
   },
+  {
+    title: " Normandy",
+    name: "normandy",
+  },
+  {
+    title: " Flappy Bird",
+    name: "flappy_bird",
+  },
 ];
 
 cc.Class({
@@ -49,6 +57,7 @@ cc.Class({
   },
 
   loadGames(url) {
+    console.log(url);
     const _this = this;
     if (!_this.isNav) {
       _this.isNav = true;

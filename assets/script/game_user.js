@@ -13,75 +13,39 @@ cc.Class({
         traceUser: true,
       });
       this.db = wx.cloud.database();
+      this.db.$ = this.db.command.aggregate;
+      this.db._ = this.db.command;
       this.openid = "";
       this.wxEnv = true;
+      Utils.isWxEnv = true;
     } else {
       this.wxEnv = false;
+      Utils.isWxEnv = false;
     }
 
-    this.userGameInfo = {
-      snakeBestScore: 0, //snake best score
-    };
+    console.log(this);
 
     // let width = this.node.parent.width;
     // let height = this.node.parent.height;
-
-    let windowH, windowW;
-
-    if (this.wxEnv) {
-      wx.getSystemInfo({
-        success: (res) => {
-          windowW = res.windowWidth;
-          windowH = res.windowHeight;
-        },
-      });
-
-      wx.getSetting({
-        success(res) {
-          if (!res.authSetting["scope.userInfo"]) {
-            let button = wx.createUserInfoButton({
-              type: "text",
-              text: "授权",
-              style: {
-                left: windowW / 2 - 100,
-                top: windowH / 2 + 100,
-                width: 200,
-                height: 40,
-                lineHeight: 40,
-                backgroundColor: "rgba(129, 129, 129, 0.8)",
-                color: "#EBBB57",
-                textAlign: "center",
-                fontSize: 16,
-                borderRadius: 4,
-              },
-            });
-            button.onTap((res) => {
-              if (res.errMsg === "getUserInfo:fail auth deny") {
-                wx.showModal({
-                  title: "请授权",
-                  content: "授权以开始游戏",
-                  showCancel: false,
-                });
-              } else {
-                console.log(res.userInfo);
-                button.destroy();
-                this.userInfo = res.userInfo;
-              }
-            });
-          }
-        },
-      });
-    }
   },
 
   start() {
+    this.userGameInfo = {
+      snakeBestScore: 0, //snake best score
+      normandyBestScore: 0,
+    };
+
     if (this.wxEnv) {
       this.login();
+      this.getWxUserInfo().then(() => {
+        Utils.GD = this;
+        console.log(this);
+      });
     } else {
       this.setLocalStorageForGameInfo();
+      Utils.GD = this;
+      console.log(this);
     }
-    Utils.GD = this;
-    console.log(Utils.GD);
   },
 
   login() {
@@ -103,7 +67,7 @@ cc.Class({
 
   /**
    * 设置localstorage userGameInfo
-   * @param  {Object} data 设置值的对象
+   * @param  {Object} data
    */
   setLocalStorageForGameInfo(score) {
     if (localStorage) {
@@ -145,29 +109,30 @@ cc.Class({
     }
   },
 
-  addGameScore(data) {
+  addGameScore(collection, data) {
     if (this.wxEnv) {
       return new Promise((resolve, reject) => {
-        console.log("1");
-        db.collection("scores")
+        this.db
+          .collection(collection)
           .add({
             data: {
               ...data,
-              createTime: new db.serverDate(),
+              createTime: new this.db.serverDate(),
             },
           })
           .then((res) => {
             resolve(res.data);
           })
-          .catch((code, msg) => reject([code, msg]));
+          .catch((err) => reject(err));
       });
     }
   },
 
-  getGameScore() {
+  getGameScore(collection) {
     if (this.wxEnv) {
       return new Promise((resolve, reject) => {
-        db.collection("scores")
+        this.db
+          .collection(collection)
           .aggregate()
           .group({
             _id: {
@@ -175,7 +140,7 @@ cc.Class({
               nickName: "$nickName",
               avatarUrl: "$avatarUrl",
             },
-            maxScore: $.max("$score"),
+            maxScore: this.db.$.max("$score"),
           })
           .sort({
             maxScore: -1,
@@ -184,8 +149,95 @@ cc.Class({
           .then((res) => {
             resolve(res);
           })
-          .catch((code, msg) => reject([code, msg]));
+          .catch((err) => reject(err));
       });
     }
+  },
+
+  getUserScore(collection) {
+    if (this.wxEnv) {
+      return new Promise((resolve, reject) => {
+        this.db
+          .collection(collection)
+          .where({
+            _openid: this.openid,
+          })
+          .orderBy("score", "desc")
+          .limit(1)
+          .get()
+          .then((res) => {
+            // console.log(res.data)
+            resolve(res.data);
+          })
+          .catch((err) => reject(err));
+      });
+    }
+  },
+
+  /**
+   * 获取wx用户信息
+   * @returns Promise
+   */
+  getWxUserInfo() {
+    let windowH, windowW;
+    let _this = this;
+    return new Promise((resolve, reject) => {
+      if (this.wxEnv) {
+        wx.getSystemInfo({
+          success: (res) => {
+            windowW = res.windowWidth;
+            windowH = res.windowHeight;
+          },
+        });
+
+        wx.getSetting({
+          success(res) {
+            console.log(res);
+            if (!res.authSetting["scope.userInfo"]) {
+              let button = wx.createUserInfoButton({
+                type: "text",
+                text: "授权",
+                style: {
+                  left: windowW / 2 - 100,
+                  top: windowH / 2 + 140,
+                  width: 200,
+                  height: 40,
+                  lineHeight: 40,
+                  backgroundColor: "rgba(16, 16, 16, 0.7)",
+                  color: "#EBBB57",
+                  textAlign: "center",
+                  fontSize: 16,
+                  borderRadius: 4,
+                },
+              });
+              button.onTap((res) => {
+                if (res.errMsg === "getUserInfo:fail auth deny") {
+                  wx.showModal({
+                    title: "请授权",
+                    content: "授权以开始游戏",
+                    showCancel: false,
+                  });
+                } else {
+                  console.log(res.userInfo);
+                  button.destroy();
+                  _this.userInfo = res.userInfo;
+                  Utils.Authorized = true;
+                  resolve();
+                }
+              });
+            } else {
+              wx.getUserInfo({
+                success: (res) => {
+                  console.log(res.userInfo);
+                  _this.userInfo = res.userInfo;
+                  Utils.Authorized = true;
+                  resolve();
+                },
+              });
+            }
+          },
+        });
+      }
+    });
   },
 });

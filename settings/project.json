@@ -2,13 +2,64 @@
   "migrate-history": [
     "cloud-function"
   ],
-  "last-module-event-record-time": 1616420584397,
+  "last-module-event-record-time": 1625138402988,
   "group-list": [
-    "default"
+    "default",
+    "heroBullet",
+    "enemyBullet",
+    "enemy",
+    "hero",
+    "buff",
+    ""
   ],
   "collision-matrix": [
     [
       true
+    ],
+    [
+      false,
+      false,
+      true,
+      true
+    ],
+    [
+      false,
+      true,
+      false,
+      null,
+      true
+    ],
+    [
+      false,
+      true,
+      false,
+      false,
+      true
+    ],
+    [
+      false,
+      false,
+      true,
+      true,
+      false,
+      true
+    ],
+    [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ],
+    [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
     ]
   ],
   "excluded-modules": [
